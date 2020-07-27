@@ -84,75 +84,171 @@ bool RBF_Core::Write_Hermite_NormalPrediction(string fname, int mode){
 
 
 
+//void RBF_Core::Set_HermiteRBF(vector<double>&pts){
+//
+//    cout<<"Set_HermiteRBF"<<endl;
+//    //for(auto a:pts)cout<<a<<' ';cout<<endl;
+//    isHermite = true;
+//
+//    a.set_size(npt*4);
+//    M.set_size(npt*4,npt*4);
+//    double *p_pts = pts.data();
+//
+//    //M00
+//    for(int i=0;i<npt;++i){
+//        for(int j=i;j<npt;++j){
+//            M(i,j) = M(j,i) = Kernal_Function_2p(p_pts+i*3, p_pts+j*3);
+//        }
+//    }
+//
+//
+//    //if(User_Lamnbda!=0)for(int i=0;i<npt;++i)M(i,i) += User_Lamnbda;
+//
+//    //M01
+//    double G[3];
+//    for(int i=0;i<npt;++i){
+//        for(int j=0;j<npt;++j){
+//
+//            Kernal_Gradient_Function_2p(p_pts+i*3, p_pts+j*3, G);
+//            //            int jind = j*3+npt;
+//            //            for(int k=0;k<3;++k)M(i,jind+k) = -G[k];
+//            //            for(int k=0;k<3;++k)M(jind+k,i) = G[k];
+//
+//            for(int k=0;k<3;++k)M(i,npt+j+k*npt) = G[k];
+//            for(int k=0;k<3;++k)M(npt+j+k*npt,i) = G[k];
+//
+//        }
+//    }
+//
+//    //M11
+//    double H[9];
+//    for(int i=0;i<npt;++i){
+//        for(int j=i;j<npt;++j){
+//
+//            Kernal_Hessian_Function_2p(p_pts+i*3, p_pts+j*3, H);
+//            //            int iind = i*3+npt;
+//            //            int jind = j*3+npt;
+//            //            for(int k=0;k<3;++k)
+//            //                for(int l=0;l<3;++l)
+//            //                    M(jind+l,iind+k) = M(iind+k,jind+l) = -H[k*3+l];
+//
+//            for(int k=0;k<3;++k)
+//                for(int l=0;l<3;++l)
+//                    M(npt+j+l*npt,npt+i+k*npt) = M(npt+i+k*npt,npt+j+l*npt) = -H[k*3+l];
+//        }
+//    }
+//
+//    //cout<<std::setprecision(5)<<std::fixed<<M<<endl;
+//
+//    bsize= 4;
+//    N.zeros(npt*4,4);
+//    b.set_size(4);
+//
+//    for(int i=0;i<npt;++i){
+//        N(i,0) = 1;
+//        for(int j=0;j<3;++j)N(i,j+1) = pts[i*3+j];
+//    }
+//    for(int i=0;i<npt;++i){
+//        //        int ind = i*3+npt;
+//        //        for(int j=0;j<3;++j)N(ind+j,j+1) = 1;
+//
+//        for(int j=0;j<3;++j)N(npt+i+j*npt,j+1) = -1;
+//    }
+//
+//    //cout<<N<<endl;
+//    //arma::vec eigval = eig_sym( M ) ;
+//    //cout<<eigval.t()<<endl;
+//
+//
+//    if(!isnewformula){
+//        cout<<"start solve M: "<<endl;
+//        auto t1 = Clock::now();
+//        if(isinv)Minv = inv(M);
+//        else {
+//            arma::mat Eye;
+//            Eye.eye(npt*4,npt*4);
+//            Minv = solve(M,Eye);
+//        }
+//        cout<<"solved M: "<<(invM_time = std::chrono::nanoseconds(Clock::now() - t1).count()/1e9)<<endl;
+//
+//        t1 = Clock::now();
+//        if(isinv)bprey = inv_sympd(N.t() * Minv * N) * N.t() * Minv;
+//        else {
+//            arma::mat Eye2;
+//            Eye2.eye(bsize,bsize);
+//            bprey = solve(N.t() * Minv * N, Eye2) * N.t() * Minv;
+//        }
+//        cout<<"solved bprey "<<std::chrono::nanoseconds(Clock::now() - t1).count()/1e9<<endl;
+//    }else{
+//
+//
+//
+//    }
+//}
+
 void RBF_Core::Set_HermiteRBF(vector<double>&pts){
 
     cout<<"Set_HermiteRBF"<<endl;
     //for(auto a:pts)cout<<a<<' ';cout<<endl;
     isHermite = true;
 
-    a.set_size(npt*4);
-    M.set_size(npt*4,npt*4);
+    int dim = point_dimension;
+
+    a.set_size(npt*(dim+1));
+    M.set_size(npt*(dim+1),npt*(dim+1));
     double *p_pts = pts.data();
 
     //M00
     for(int i=0;i<npt;++i){
         for(int j=i;j<npt;++j){
-            M(i,j) = M(j,i) = Kernal_Function_2p(p_pts+i*3, p_pts+j*3);
+            M(i,j) = M(j,i) = Kernal_Function_2p(p_pts+i*dim, p_pts+j*dim);
         }
     }
-
 
     //if(User_Lamnbda!=0)for(int i=0;i<npt;++i)M(i,i) += User_Lamnbda;
 
     //M01
-    double G[3];
+//    double G[3];
+    double G[dim];
     for(int i=0;i<npt;++i){
         for(int j=0;j<npt;++j){
 
-            Kernal_Gradient_Function_2p(p_pts+i*3, p_pts+j*3, G);
-            //            int jind = j*3+npt;
-            //            for(int k=0;k<3;++k)M(i,jind+k) = -G[k];
-            //            for(int k=0;k<3;++k)M(jind+k,i) = G[k];
+            Kernal_Gradient_Function_2p(p_pts+i*dim, p_pts+j*dim, G);
 
-            for(int k=0;k<3;++k)M(i,npt+j+k*npt) = G[k];
-            for(int k=0;k<3;++k)M(npt+j+k*npt,i) = G[k];
+
+            for(int k=0;k<dim;++k)M(i,npt+j+k*npt) = G[k];
+            for(int k=0;k<dim;++k)M(npt+j+k*npt,i) = G[k];
 
         }
     }
 
     //M11
-    double H[9];
+//    double H[9];
+    double H[dim*dim];
     for(int i=0;i<npt;++i){
         for(int j=i;j<npt;++j){
 
-            Kernal_Hessian_Function_2p(p_pts+i*3, p_pts+j*3, H);
-            //            int iind = i*3+npt;
-            //            int jind = j*3+npt;
-            //            for(int k=0;k<3;++k)
-            //                for(int l=0;l<3;++l)
-            //                    M(jind+l,iind+k) = M(iind+k,jind+l) = -H[k*3+l];
+            Kernal_Hessian_Function_2p(p_pts+i*dim, p_pts+j*dim, H);
 
-            for(int k=0;k<3;++k)
-                for(int l=0;l<3;++l)
-                    M(npt+j+l*npt,npt+i+k*npt) = M(npt+i+k*npt,npt+j+l*npt) = -H[k*3+l];
+
+            for(int k=0;k<dim;++k)
+                for(int l=0;l<dim;++l)
+                    M(npt+j+l*npt,npt+i+k*npt) = M(npt+i+k*npt,npt+j+l*npt) = -H[k*dim+l];
         }
     }
 
     //cout<<std::setprecision(5)<<std::fixed<<M<<endl;
 
-    bsize= 4;
-    N.zeros(npt*4,4);
-    b.set_size(4);
+    bsize= dim+1;
+    N.zeros(npt*(dim+1),dim+1);
+    b.set_size(dim+1);
 
     for(int i=0;i<npt;++i){
         N(i,0) = 1;
-        for(int j=0;j<3;++j)N(i,j+1) = pts[i*3+j];
+        for(int j=0;j<dim;++j)N(i,j+1) = pts[i*dim+j];
     }
     for(int i=0;i<npt;++i){
-        //        int ind = i*3+npt;
-        //        for(int j=0;j<3;++j)N(ind+j,j+1) = 1;
-
-        for(int j=0;j<3;++j)N(npt+i+j*npt,j+1) = -1;
+        for(int j=0;j<dim;++j)N(npt+i+j*npt,j+1) = -1;
     }
 
     //cout<<N<<endl;
@@ -166,7 +262,7 @@ void RBF_Core::Set_HermiteRBF(vector<double>&pts){
         if(isinv)Minv = inv(M);
         else {
             arma::mat Eye;
-            Eye.eye(npt*4,npt*4);
+            Eye.eye(npt*(dim+1),npt*(dim+1));
             Minv = solve(M,Eye);
         }
         cout<<"solved M: "<<(invM_time = std::chrono::nanoseconds(Clock::now() - t1).count()/1e9)<<endl;
@@ -180,8 +276,6 @@ void RBF_Core::Set_HermiteRBF(vector<double>&pts){
         }
         cout<<"solved bprey "<<std::chrono::nanoseconds(Clock::now() - t1).count()/1e9<<endl;
     }else{
-
-
 
     }
 }
@@ -258,27 +352,31 @@ void RBF_Core::Set_HermiteApprox_Lamnda(double hermite_ls){
 
 
 void RBF_Core::Set_Hermite_PredictNormal(vector<double>&pts){
-
-
-
     Set_HermiteRBF(pts);
 
     auto t1 = Clock::now();
     cout<<"setting K"<<endl;
 
+    int dim = point_dimension;
 
     if(!isnewformula){
         arma::mat D = N.t()*Minv;
         K = Minv - D.t()*inv(D*N)*D;
-        K = K.submat( npt, npt, npt*4-1, npt*4-1 );
+//        K = K.submat( npt, npt, npt*4-1, npt*4-1 );
+        K = K.submat( npt, npt, npt*(dim+1)-1, npt*(dim+1)-1 );
         finalH = saveK_finalH = K;
 
-    }else{
+    }else{  // default branch
         cout<<"using new formula"<<endl;
-        bigM.zeros((npt+1)*4,(npt+1)*4);
-        bigM.submat(0,0,npt*4-1,npt*4-1) = M;
-        bigM.submat(0,npt*4,(npt)*4-1, (npt+1)*4-1) = N;
-        bigM.submat(npt*4,0,(npt+1)*4-1, (npt)*4-1) = N.t();
+        // bigM: matrix A in the paper
+//        bigM.zeros((npt+1)*4,(npt+1)*4);
+//        bigM.submat(0,0,npt*4-1,npt*4-1) = M;
+//        bigM.submat(0,npt*4,(npt)*4-1, (npt+1)*4-1) = N;
+//        bigM.submat(npt*4,0,(npt+1)*4-1, (npt)*4-1) = N.t();
+        bigM.zeros((npt+1)*(dim+1),(npt+1)*(dim+1));
+        bigM.submat(0,0,npt*(dim+1)-1,npt*(dim+1)-1) = M;
+        bigM.submat(0,npt*(dim+1),(npt)*(dim+1)-1, (npt+1)*(dim+1)-1) = N;
+        bigM.submat(npt*(dim+1),0,(npt+1)*(dim+1)-1, (npt)*(dim+1)-1) = N.t();
 
         //for(int i=0;i<4;++i)bigM(i+(npt)*4,i+(npt)*4) = 1;
 
@@ -286,15 +384,21 @@ void RBF_Core::Set_Hermite_PredictNormal(vector<double>&pts){
         bigMinv = inv(bigM);
         cout<<"bigMinv: "<<(setK_time= std::chrono::nanoseconds(Clock::now() - t2).count()/1e9)<<endl;
 		bigM.clear();
-        Minv = bigMinv.submat(0,0,npt*4-1,npt*4-1);
-        Ninv = bigMinv.submat(0,npt*4,(npt)*4-1, (npt+1)*4-1);
+		// Minv: matrix J in the paper
+		// Ninv: matrix K in the paper
+//        Minv = bigMinv.submat(0,0,npt*4-1,npt*4-1);
+//        Ninv = bigMinv.submat(0,npt*4,(npt)*4-1, (npt+1)*4-1);
+        Minv = bigMinv.submat(0,0,npt*(dim+1)-1,npt*(dim+1)-1);
+        Ninv = bigMinv.submat(0,npt*(dim+1),(npt)*(dim+1)-1, (npt+1)*(dim+1)-1);
 
         bigMinv.clear();
         //K = Minv - Ninv *(N.t()*Minv);
         K = Minv;
         K00 = K.submat(0,0,npt-1,npt-1);
-        K01 = K.submat(0,npt,npt-1,npt*4-1);
-        K11 = K.submat( npt, npt, npt*4-1, npt*4-1 );
+//        K01 = K.submat(0,npt,npt-1,npt*4-1);
+//        K11 = K.submat( npt, npt, npt*4-1, npt*4-1 );
+        K01 = K.submat(0,npt,npt-1,npt*(dim+1)-1);
+        K11 = K.submat( npt, npt, npt*(dim+1)-1, npt*(dim+1)-1 );
 
         M.clear();N.clear();
         cout<<"K11: "<<K11.n_cols<<endl;
@@ -312,9 +416,6 @@ void RBF_Core::Set_Hermite_PredictNormal(vector<double>&pts){
 
         cout<<"K: "<<K.n_cols<<endl;
     }
-
-
-
 
     //K = ( K.t() + K )/2;
     cout<<"solve K total: "<<(setK_time= std::chrono::nanoseconds(Clock::now() - t1).count()/1e9)<<endl;
