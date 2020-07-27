@@ -55,65 +55,109 @@ double XCube_Kernel(const double x){
     return pow(x,3);
 }
 
-double XCube_Kernel_2p(const double *p1, const double *p2){
+//double XCube_Kernel_2p(const double *p1, const double *p2){
+//    return XCube_Kernel(MyUtility::_VerticesDistance(p1,p2));
+//}
 
-
-    return XCube_Kernel(MyUtility::_VerticesDistance(p1,p2));
-
+double XCube_Kernel_2p_3D(const double *p1, const double *p2){
+    return XCube_Kernel(MyUtility::_VerticesDistance(p1,p2, 3));
 }
 
-void XCube_Gradient_Kernel_2p(const double *p1, const double *p2, double *G){
+double XCube_Kernel_2p_2D(const double *p1, const double *p2){
+    return XCube_Kernel(MyUtility::_VerticesDistance(p1,p2, 2));
+}
 
 
-    double len_dist  = MyUtility::_VerticesDistance(p1,p2);
-    for(int i=0;i<3;++i)G[i] = 3*len_dist*(p1[i]-p2[i]);
+//void XCube_Gradient_Kernel_2p(const double *p1, const double *p2, double *G){
+//    double len_dist  = MyUtility::_VerticesDistance(p1,p2);
+//    for(int i=0;i<3;++i)G[i] = 3*len_dist*(p1[i]-p2[i]);
+//    return;
+//}
+
+void XCube_Gradient_Kernel_2p_3D(const double *p1, const double *p2, double *G){
+    int dim = 3;
+    double len_dist  = MyUtility::_VerticesDistance(p1,p2, dim);
+    for(int i=0;i<dim;++i) G[i] = 3*len_dist*(p1[i]-p2[i]);
     return;
-
 }
 
-double XCube_GradientDot_Kernel_2p(const double *p1, const double *p2, const double *p3){
-
-
-    double G[3];
-    XCube_Gradient_Kernel_2p(p1,p2,G);
-    return MyUtility::dot(p3,G);
-
+void XCube_Gradient_Kernel_2p_2D(const double *p1, const double *p2, double *G){
+    int dim = 2;
+    double len_dist  = MyUtility::_VerticesDistance(p1,p2, dim);
+    for(int i=0;i<dim;++i) G[i] = 3*len_dist*(p1[i]-p2[i]);
+    return;
 }
 
-void XCube_Hessian_Kernel_2p(const double *p1, const double *p2, double *H){
+//double XCube_GradientDot_Kernel_2p(const double *p1, const double *p2, const double *p3){
+//
+//
+//    double G[3];
+//    XCube_Gradient_Kernel_2p(p1,p2,G);
+//    return MyUtility::dot(p3,G);
+//
+//}
 
+//void XCube_Hessian_Kernel_2p(const double *p1, const double *p2, double *H){
+//    double diff[3];
+//    for(int i=0;i<3;++i)diff[i] = p1[i] - p2[i];
+//    double len_dist  = sqrt(MyUtility::len(diff));
+//
+//    if(len_dist<1e-8){
+//        for(int i=0;i<9;++i)H[i] = 0;
+//    }else{
+//        for(int i=0;i<3;++i)for(int j=0;j<3;++j)
+//            if(i==j)H[i*3+j] = 3 * pow(diff[i],2) / len_dist + 3 * len_dist;
+//            else H[i*3+j] = 3 * diff[i] * diff[j] / len_dist;
+//    }
+//    return;
+//}
 
+void XCube_Hessian_Kernel_2p_3D(const double *p1, const double *p2, double *H){
+    int dim = 3;
     double diff[3];
-    for(int i=0;i<3;++i)diff[i] = p1[i] - p2[i];
-    double len_dist  = sqrt(MyUtility::len(diff));
+    for(int i=0;i<dim;++i) diff[i] = p1[i] - p2[i];
+    double len_dist  = sqrt(MyUtility::len(diff, dim));
 
     if(len_dist<1e-8){
-        for(int i=0;i<9;++i)H[i] = 0;
+        for(int i=0;i<dim*dim;++i) H[i] = 0;
     }else{
-        for(int i=0;i<3;++i)for(int j=0;j<3;++j)
-            if(i==j)H[i*3+j] = 3 * pow(diff[i],2) / len_dist + 3 * len_dist;
-            else H[i*3+j] = 3 * diff[i] * diff[j] / len_dist;
+        for(int i=0;i<dim;++i)for(int j=0;j<dim;++j)
+                if(i==j)H[i*dim+j] = 3 * pow(diff[i],2) / len_dist + 3 * len_dist;
+                else H[i*dim+j] = 3 * diff[i] * diff[j] / len_dist;
     }
-
-
     return;
-
 }
 
-void XCube_HessianDot_Kernel_2p(const double *p1, const double *p2, const double *p3, vector<double>&dotout){
+void XCube_Hessian_Kernel_2p_2D(const double *p1, const double *p2, double *H){
+    int dim = 2;
+    double diff[2];
+    for(int i=0;i<dim;++i) diff[i] = p1[i] - p2[i];
+    double len_dist  = sqrt(MyUtility::len(diff, dim));
 
-
-    double H[9];
-    XCube_Gradient_Kernel_2p(p1,p2,H);
-    dotout.resize(3);
-    for(int i=0;i<3;++i){
-        dotout[i] = 0;
-        for(int j=0;j<3;++j){
-            dotout[i] += H[i*3+j] * p3[j];
-        }
+    if(len_dist<1e-8){
+        for(int i=0;i<dim*dim;++i) H[i] = 0;
+    }else{
+        for(int i=0;i<dim;++i)for(int j=0;j<dim;++j)
+                if(i==j)H[i*dim+j] = 3 * pow(diff[i],2) / len_dist + 3 * len_dist;
+                else H[i*dim+j] = 3 * diff[i] * diff[j] / len_dist;
     }
-
+    return;
 }
+
+//void XCube_HessianDot_Kernel_2p(const double *p1, const double *p2, const double *p3, vector<double>&dotout){
+//
+//
+//    double H[9];
+//    XCube_Gradient_Kernel_2p(p1,p2,H);
+//    dotout.resize(3);
+//    for(int i=0;i<3;++i){
+//        dotout[i] = 0;
+//        for(int j=0;j<3;++j){
+//            dotout[i] += H[i*3+j] * p3[j];
+//        }
+//    }
+//
+//}
 
 RBF_Core::RBF_Core(){
 
@@ -169,9 +213,19 @@ void RBF_Core::Init(RBF_Kernal kernal){
 
     case XCube:
         Kernal_Function = XCube_Kernel;
-        Kernal_Function_2p = XCube_Kernel_2p;
-        Kernal_Gradient_Function_2p = XCube_Gradient_Kernel_2p;
-        Kernal_Hessian_Function_2p = XCube_Hessian_Kernel_2p;
+        switch (point_dimension) {
+            case 2:
+                Kernal_Function_2p = XCube_Kernel_2p_2D;
+                Kernal_Gradient_Function_2p = XCube_Gradient_Kernel_2p_2D;
+                Kernal_Hessian_Function_2p = XCube_Hessian_Kernel_2p_2D;
+                break;
+            case 3:
+                Kernal_Function_2p = XCube_Kernel_2p_3D;
+                Kernal_Gradient_Function_2p = XCube_Gradient_Kernel_2p_3D;
+                Kernal_Hessian_Function_2p = XCube_Hessian_Kernel_2p_3D;
+                break;
+        }
+
         break;
 
     default:

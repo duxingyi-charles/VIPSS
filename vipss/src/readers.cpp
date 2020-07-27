@@ -1159,6 +1159,31 @@ bool readXYZ(string filename, vector<double>&v){
     return true;
 }
 
+// dxy add: read input points
+bool readPTS(string filename, int& dim, vector<double>&v){
+
+    ifstream reader(filename.data(), ofstream::in);
+    if (!reader.good()) {
+        cout << "Can not open the file " << filename << endl;
+        return false;
+    }else {
+        cout << "Reading: "<<filename<<endl;
+    }
+    // first number: dimension (2 or 3)
+    reader >> dim;
+    // read point coordinates
+    v.clear();
+    double val;
+    while(!reader.eof()){
+        reader>>val;
+        v.push_back(val);
+    }
+    reader.close();
+    return true;
+}
+
+//
+
 bool readXYZnormal(string filename, vector<double>&v, vector<double>&vn){
 
     ifstream reader(filename.data(), ofstream::in);

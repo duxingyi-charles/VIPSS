@@ -114,13 +114,16 @@ int RBF_Core::InjectData(vector<double> &pts, vector<int> &labels, vector<double
 
     isuse_sparse = para.isusesparse;
     sparse_para = para.sparse_para;
+    //
+    point_dimension = para.point_dimension;
     //isuse_sparse = false;
     this->pts = pts;
     this->labels = labels;
     this->normals = normals;
     this->tangents = tangents;
     this->edges = edges;
-    npt = this->pts.size()/3;
+//    npt = this->pts.size()/3;
+    npt = this->pts.size()/point_dimension;
     curMethod = para.Method;
     curInitMethod = para.InitMethod;
 
@@ -129,7 +132,7 @@ int RBF_Core::InjectData(vector<double> &pts, vector<int> &labels, vector<double
     rangevalue = para.rangevalue;
     maxvalue = 10000;
 
-    cout<<"number of points: "<<pts.size()/3<<endl;
+    cout<<"number of points: "<<npt<<endl;
     cout<<"normals: "<<this->normals.size()<<endl;
     sol.Statue = 1;
     Init(para.Kernal);

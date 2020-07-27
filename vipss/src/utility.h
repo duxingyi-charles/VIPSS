@@ -93,10 +93,17 @@ inline void minusVec(const T *v1,const T *v2,T *e,const int dim = 3){
 }
 template <class T>
 inline T normVec(const T *e){return sqrt(dot(e,e));}
+
+//template <class T>
+//inline T len(const T *e){
+//    return dot(e,e);
+//}
+
 template <class T>
-inline T len(const T *e){
-    return dot(e,e);
+inline T len(const T *e, const int dim = 3){
+    return dot(e,e,dim);
 }
+
 template <class T>
 inline void copyVec(T *vo, T *vd,int dim = 3){
     for(int i =0;i<dim;i++)vd[i] = vo[i];

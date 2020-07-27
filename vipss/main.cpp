@@ -14,7 +14,6 @@ int main(int argc, char** argv)
     cout << argc << endl;
 
 
-
     string infilename;
     string outpath, pcname, ext, inpath;
 
@@ -61,13 +60,16 @@ int main(int argc, char** argv)
 
     cout<<"number of voxel per D: "<<n_voxel_line<<endl;
 
-
+    // algorithm begins
     vector<double>Vs;
     RBF_Core rbf_core;
     RBF_Paras para = Set_RBF_PARA();
     para.user_lamnbda = user_lambda;
 
-    readXYZ(infilename,Vs);
+//    readXYZ(infilename,Vs);
+    readPTS(infilename, para.point_dimension, Vs);
+    std::cout << "input point dimension: " << para.point_dimension << std::endl;
+    //
     rbf_core.InjectData(Vs,para);
     rbf_core.BuildK(para);
     rbf_core.InitNormal(para);

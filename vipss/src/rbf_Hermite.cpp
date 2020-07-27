@@ -93,6 +93,8 @@ void RBF_Core::Set_HermiteRBF(vector<double>&pts){
     a.set_size(npt*4);
     M.set_size(npt*4,npt*4);
     double *p_pts = pts.data();
+
+    //M00
     for(int i=0;i<npt;++i){
         for(int j=i;j<npt;++j){
             M(i,j) = M(j,i) = Kernal_Function_2p(p_pts+i*3, p_pts+j*3);
@@ -102,7 +104,7 @@ void RBF_Core::Set_HermiteRBF(vector<double>&pts){
 
     //if(User_Lamnbda!=0)for(int i=0;i<npt;++i)M(i,i) += User_Lamnbda;
 
-
+    //M01
     double G[3];
     for(int i=0;i<npt;++i){
         for(int j=0;j<npt;++j){
@@ -118,6 +120,7 @@ void RBF_Core::Set_HermiteRBF(vector<double>&pts){
         }
     }
 
+    //M11
     double H[9];
     for(int i=0;i<npt;++i){
         for(int j=i;j<npt;++j){

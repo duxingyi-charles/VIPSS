@@ -71,6 +71,9 @@ bool writeCtrGraphFile(string filename, const vector<float> &vertices, const vec
 bool writeCurNetFile(string filename, const vector<double> &vertices, const vector<vector<int>>&edge2vertices, const vector<vector<int>>&edgeMat, const vector<vector<double>>&planepara, const vector<double>&verticesNor);
 
 bool readXYZ(string filename, vector<double>&v);
+//
+bool readPTS(string filename, int& dim, vector<double>&v);
+//
 bool readXYZnormal(string filename, vector<double>&v, vector<double>&vn);
 bool writeXYZ(string filename, vector<double>&v);
 bool writeXYZnormal(string filename, vector<double>&v, vector<double>&vn);

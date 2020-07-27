@@ -76,6 +76,9 @@ public:
     double Hermite_weight_smoothness;
     double Hermite_ls_weight;
     double Hermite_designcurve_weight;
+    //
+    int point_dimension;
+    //
     double ClusterCut_percentage;
     double ClusterCut_LocalMax_percentage;
     int ClusterVisualMethod;
@@ -161,6 +164,7 @@ public:
 
     bool isuse_sparse = false;
     double sparse_para = 1e-3;
+    int point_dimension;
 
 public:
     unordered_map<int, string>mp_RBF_INITMETHOD;
