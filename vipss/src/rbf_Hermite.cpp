@@ -23,10 +23,11 @@ void RBF_Core::NormalRecification(double maxlen, vector<double>&nors){
 
     double maxlen_r = -1;
     auto p_vn = nors.data();
-    int  np = nors.size()/3;
+    int dim = point_dimension;
+    int  np = nors.size()/dim;
     if(1){
         for(int i=0;i<np;++i){
-            maxlen_r = max(maxlen_r,MyUtility::normVec(p_vn+i*3));
+            maxlen_r = max(maxlen_r,MyUtility::normVec(p_vn+i*dim,dim));
         }
 
         cout<<"maxlen_r: "<<maxlen_r<<endl;
@@ -77,7 +78,11 @@ bool RBF_Core::Write_Hermite_NormalPrediction(string fname, int mode){
     //writePLYFile(fname,pts,f2v,nors,labelcolor);
 
 //    writeObjFile_vn(fname,pts,nors);
-    writePLYFile_VN(fname,pts,nors);
+    if (point_dimension == 3) {
+        writePLYFile_VN(fname,pts,nors);
+    } else { //2D
+        writePLYFile_VN_2D(fname,pts,nors);
+    }
 
     return 1;
 }
@@ -428,7 +433,9 @@ void RBF_Core::Set_Hermite_PredictNormal(vector<double>&pts){
 void RBF_Core::SetInitnormal_Uninorm(){
 
     initnormals_uninorm = initnormals;
-    for(int i=0;i<npt;++i)MyUtility::normalize(initnormals_uninorm.data()+i*3);
+
+    int dim = point_dimension;
+    for(int i=0;i<npt;++i)MyUtility::normalize(initnormals_uninorm.data()+i*dim,dim);
 
 }
 
@@ -453,17 +460,28 @@ int RBF_Core::Solve_Hermite_PredictNormal_UnitNorm(){
 
     int smalleig = 0;
 
-    initnormals.resize(npt*3);
-    arma::vec y(npt*4);
+    int dim = point_dimension;
+
+//    initnormals.resize(npt*3);
+//    arma::vec y(npt*4);
+//    for(int i=0;i<npt;++i)y(i) = 0;
+//    for(int i=0;i<npt*3;++i)y(i+npt) = eigvec(i,smalleig);
+//    for(int i=0;i<npt;++i){
+//        initnormals[i*3]   = y(npt+i);
+//        initnormals[i*3+1] = y(npt+i+npt);
+//        initnormals[i*3+2] = y(npt+i+npt*2);
+//        //MyUtility::normalize(normals.data()+i*3);
+//    }
+    initnormals.resize(npt*dim);
+    arma::vec y(npt*(dim+1));
     for(int i=0;i<npt;++i)y(i) = 0;
-    for(int i=0;i<npt*3;++i)y(i+npt) = eigvec(i,smalleig);
+    for(int i=0;i<npt*dim;++i)y(i+npt) = eigvec(i,smalleig);
     for(int i=0;i<npt;++i){
-        initnormals[i*3]   = y(npt+i);
-        initnormals[i*3+1] = y(npt+i+npt);
-        initnormals[i*3+2] = y(npt+i+npt*2);
+        for (int j=0; j<dim; ++j) {
+            initnormals[i*dim+j] = y(npt+i+npt*j);
+        }
         //MyUtility::normalize(normals.data()+i*3);
     }
-
 
     SetInitnormal_Uninorm();
     cout<<"Solve_Hermite_PredictNormal_UnitNorm finish"<<endl;
@@ -538,6 +556,56 @@ double optfunc_Hermite(const vector<double>&x, vector<double>&grad, void *fdata)
 
 }
 
+double optfunc_Hermite_2D(const vector<double>&x, vector<double>&grad, void *fdata){
+
+    auto t1 = Clock::now();
+    RBF_Core *drbf = reinterpret_cast<RBF_Core*>(fdata);
+    int n = drbf->npt;
+    int dim = 2;
+    arma::vec arma_x(n*dim);
+
+    //(  cos(b), sin(b)  )  b => [-pi, pi];
+    vector<double> sinb_cosb(n * 2);
+    for(int i=0;i<n;++i){
+        int ind = i*2;
+        sinb_cosb[ind] = sin(x[i]);
+        sinb_cosb[ind+1] = cos(x[i]);
+    }
+
+    for(int i=0;i<n;++i){
+        auto p_scsc = sinb_cosb.data()+i*2;
+        //
+        arma_x(i) = p_scsc[1];
+        arma_x(i+n) = p_scsc[0];
+    }
+
+    arma::vec a2;
+    //if(drbf->isuse_sparse)a2 = drbf->sp_H * arma_x;
+    //else
+    a2 = drbf->finalH * arma_x;
+
+
+    if (!grad.empty()) {
+
+        grad.resize(n);
+
+        for(int i=0;i<n;++i){
+            auto p_scsc = sinb_cosb.data()+i*2;
+
+            grad[i] = -a2(i) * p_scsc[0] + a2(i+n) * p_scsc[1];
+        }
+    }
+
+    double re = arma::dot( arma_x, a2 );
+    countopt++;
+
+    acc_time+=(std::chrono::nanoseconds(Clock::now() - t1).count()/1e9);
+
+    //cout<<countopt++<<' '<<re<<endl;
+    return re;
+
+}
+
 
 
 int RBF_Core::Opt_Hermite_PredictNormal_UnitNormal(){
@@ -597,6 +665,55 @@ int RBF_Core::Opt_Hermite_PredictNormal_UnitNormal(){
     return 1;
 }
 
+int RBF_Core::Opt_Hermite_PredictNormal_UnitNormal_2D(){
+
+    sol.solveval.resize(npt);
+
+    int dim = point_dimension;
+
+    for(int i=0;i<npt;++i){
+        double *veccc = initnormals.data()+i*dim;
+        {
+            sol.solveval[i] = atan2( veccc[1], veccc[0]);
+        }
+    }
+
+    if(1){
+        vector<double>upper(npt);
+        vector<double>lower(npt);
+        for(int i=0;i<npt;++i){
+            upper[i] = 2 * my_PI;
+            lower[i] = -2 * my_PI;
+        }
+
+        countopt = 0;
+        acc_time = 0;
+
+        //LocalIterativeSolver(sol,kk==0?normals:newnormals,300,1e-7);
+        Solver::nloptwrapper(lower,upper,optfunc_Hermite_2D,this,1e-7,3000,sol);
+        cout<<"number of call: "<<countopt<<" t: "<<acc_time<<" ave: "<<acc_time/countopt<<endl;
+        callfunc_time = acc_time;
+        solve_time = sol.time;
+        //for(int i=0;i<npt;++i)cout<< sol.solveval[i]<<' ';cout<<endl;
+
+    }
+    newnormals.resize(npt*dim);
+    arma::vec y(npt*(dim+1));
+    for(int i=0;i<npt;++i)y(i) = 0;
+    for(int i=0;i<npt;++i){
+        double b = sol.solveval[i];
+        newnormals[i*dim] = y(npt+i) = cos(b);
+        newnormals[i*dim+1] = y(npt+i+npt) = sin(b);
+        MyUtility::normalize(newnormals.data()+i*dim, dim);
+    }
+
+    Set_RBFCoef(y);
+
+    //sol.energy = arma::dot(a,M*a);
+    cout<<"Opt_Hermite_PredictNormal_UnitNormal"<<endl;
+    return 1;
+}
+
 void RBF_Core::Set_RBFCoef(arma::vec &y){
     cout<<"Set_RBFCoef"<<endl;
     if(curMethod==HandCraft){
@@ -607,8 +724,8 @@ void RBF_Core::Set_RBFCoef(arma::vec &y){
         b = bprey * y;
         a = Minv * (y - N*b);
     }else{
-
-        if(User_Lamnbda>0)y.subvec(0,npt-1) = -User_Lamnbda*dI*K01*y.subvec(npt,npt*4-1);
+        int dim = point_dimension;
+        if(User_Lamnbda>0)y.subvec(0,npt-1) = -User_Lamnbda*dI*K01*y.subvec(npt,npt*(dim+1)-1);
 
         a = Minv*y;
         b = Ninv.t()*y;

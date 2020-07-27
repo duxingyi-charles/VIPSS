@@ -17,6 +17,9 @@ bool writePLYFile(string filename, const vector<double>&vertices, const vector<u
 bool writePLYFile_VF(string filename,const vector<double>&vertices,const vector<unsigned int>&faces2vertices);
 bool writePLYFile_VN(string filename,const vector<double>&vertices, const vector<double>&vertices_normal);
 
+bool writePLYFile_VN_2D(string filename,const vector<double>&vertices, const vector<double>&vertices_normal);
+
+
 bool readPLYFile(string filename,  vector<double>&vertices, vector<double> &vertices_normal);
 
 bool readObjFile(string filename, vector<double>&vertices, vector<unsigned int>&faces2vertices, vector<double> &vertices_normal);

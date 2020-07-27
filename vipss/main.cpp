@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
     rbf_core.Write_Hermite_NormalPrediction(outpath+pcname+"_normal", 1);
 
-    if(is_surfacing){
+    if(is_surfacing && para.point_dimension == 3){
         rbf_core.Surfacing(0,n_voxel_line);
         rbf_core.Write_Surface(outpath+pcname+"_surface");
     }

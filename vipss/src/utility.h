@@ -91,8 +91,11 @@ template <class T>
 inline void minusVec(const T *v1,const T *v2,T *e,const int dim = 3){
     for(int i =0;i<dim;++i)e[i]= v1[i]-v2[i];
 }
+//template <class T>
+//inline T normVec(const T *e){return sqrt(dot(e,e));}
+
 template <class T>
-inline T normVec(const T *e){return sqrt(dot(e,e));}
+inline T normVec(const T *e, const int dim = 3){return sqrt(dot(e,e,dim));}
 
 //template <class T>
 //inline T len(const T *e){

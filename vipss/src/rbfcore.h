@@ -283,6 +283,7 @@ public:
 public:
 
     int Opt_Hermite_PredictNormal_UnitNormal();
+    int Opt_Hermite_PredictNormal_UnitNormal_2D();
 
 public:
 

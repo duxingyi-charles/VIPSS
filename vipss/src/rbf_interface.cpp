@@ -75,7 +75,11 @@ void RBF_Core::OptNormal(int method){
     switch(curMethod){
 
     case Hermite_UnitNormal:
-        Opt_Hermite_PredictNormal_UnitNormal();
+        if (point_dimension == 3) {
+            Opt_Hermite_PredictNormal_UnitNormal();
+        } else { // 2D
+            Opt_Hermite_PredictNormal_UnitNormal_2D();
+        }
         break;
 
     }
