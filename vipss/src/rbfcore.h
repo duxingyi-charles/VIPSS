@@ -274,6 +274,10 @@ public:
     bool Write_Hermite_MST(string fname);
     void WriteSeletivePLY(string fname, vector<double>&allnormals, vector<int>&pickInd);
 
+    bool Write_RBFCoeff(string fname);
+    // debug
+    bool Write_tmp(string fname);
+
     void SetInitnormal_Uninorm();
     void ClearSavedIterBatchInit();
     void SaveIterBatchInit(vector<double>&allnormals, vector<double>&allnormals_uninorm, vector<int>&pickInd);

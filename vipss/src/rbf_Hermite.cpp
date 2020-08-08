@@ -731,10 +731,63 @@ void RBF_Core::Set_RBFCoef(arma::vec &y){
         b = Ninv.t()*y;
 
     }
+}
 
+bool RBF_Core::Write_RBFCoeff(string fname)
+{
+    ofstream outer(fname.data(), ofstream::out);
+    if (!outer.good()) {
+        cout << "Can not create output file " << fname << endl;
+        return false;
+    }
+
+    for (int i = 0; i < a.size(); ++i) {
+        outer << a(i) << " ";
+    }
+    outer << endl;
+
+    for (int i = 0; i < b.size(); ++i) {
+        outer << b(i) << " ";
+    }
+    outer << endl;
+
+    outer.close();
+    cout<<"saving finish: "<< fname <<endl;
+    return true;
 
 }
 
+bool RBF_Core::Write_tmp(string fname)
+{
+    ofstream outer(fname.data(), ofstream::out);
+    if (!outer.good()) {
+        cout << "Can not create output file " << fname << endl;
+        return false;
+    }
+
+    // Minv
+    for (int i = 0; i < Minv.n_rows; ++i) {
+        for (int j=0; j < Minv.n_cols; ++j) {
+            outer << Minv(i,j) << " ";
+        }
+        outer << endl;
+    }
+    outer << endl;
+
+    // Ninv
+    for (int i = 0; i < Ninv.n_rows; ++i) {
+        for (int j=0; j < Ninv.n_cols; ++j) {
+            outer << Ninv(i,j) << " ";
+        }
+        outer << endl;
+    }
+    outer << endl;
+
+    outer.close();
+    cout<<"saving finish: "<< fname <<endl;
+    return true;
+
+}
 
 
 int RBF_Core::Lamnbda_Search_GlobalEigen(){
